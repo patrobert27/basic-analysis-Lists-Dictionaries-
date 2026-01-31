@@ -46,6 +46,115 @@ def validate_employee(data: dict) -> tuple[bool, str | None]:
     # All validations passed
     return True, None
 
+
+def metric_dep(data: list[dict]) -> dict:
+    """
+    data: lista de empleados (dicts) con al menos:
+          - 'department'
+          - 'monthly_salary'
+    return: dict con salario medio por departamento
+    """
+
+    departments = {}  
+    # {
+    #   "IT": {"total_salary": 12345.0, "count": 5},
+    #   "HR": {"total_salary": 6789.0, "count": 3}
+    # }
+
+    for employee in data:
+        dep = employee["department"]
+        salary = float(employee["monthly_salary"])
+
+        if dep not in departments:
+            departments[dep] = {
+                "total_salary": 0.0,
+                "count": 0
+            }
+
+        departments[dep]["total_salary"] += salary
+        departments[dep]["count"] += 1
+
+    # calcular salario medio
+    average_salary = {}
+
+    for dep, values in departments.items():
+        average_salary[dep] = round(values["total_salary"] / values["count"], 2)
+
+    average_salary_by_dep_sorted = dict(sorted(average_salary.items(), key=lambda item: item[1], reverse=True))
+
+    return average_salary_by_dep_sorted
+
+def metric_city(data: list[dict]) -> dict:
+    """
+    data: lista de empleados (dicts) con al menos:
+          - 'city'
+          - 'count'
+    return: 5 city con mas personas
+    """
+    cities = {}  
+    # {
+    #   "London": {"total_persons": 12345.0},
+    #   "Paris": {"total_persons": 12345.0}
+    # }
+
+    for employee in data:
+        city = employee["city"]
+
+        if city not in cities:
+            cities[city] = {
+                "total_persons": 0,
+            }
+
+        cities[city]["total_persons"] += 1
+
+
+    cities_sorted = dict(sorted(cities.items(), key=lambda item: item[0], reverse=True) [:5])
+
+
+    return cities_sorted
+
+
+def metric_type_wrk(data: list[dict]) -> dict:
+    """
+    data: lista de empleados (dicts) con al menos:
+          - 'remote' o true o false
+          - 'country'
+    return: 5 city con mas personas
+    """
+    countries = {}  
+    # {
+    #   "Spain": {"total_persons": 12345.0, 'remote': 0, 'presencial': 0},
+    #   "France": {"total_persons": 12345.0, 'remote': 0, 'presencial': 0}
+    # }
+
+    for employee in data:
+        country = employee["country"]
+        remote = employee["remote"]
+
+        if country not in countries:
+            countries[country] = {
+                "total_persons": 0,
+                'remote': 0,
+                'presencial': 0,
+                "remote_percentage": 0.0
+            }
+
+        countries[country]["total_persons"] += 1
+        if remote:
+            countries[country]["remote"] += 1
+        else:
+            countries[country]["presencial"] += 1
+
+    for country, values in countries.items():
+        total = values["total_persons"]
+        remote = values["remote"]
+
+        values["remote_percentage"] = round((remote / total) * 100, 2)
+
+    return countries
+
+
+
 def main() -> None:
     valid_data: list[dict] = []
     invalid_data: list[dict] = []  # {"employee_id": ..., "reason": ...}
@@ -68,6 +177,11 @@ def main() -> None:
                     "reason": reason
                 })
 
+        if valid_data:
+            average_salary = metric_dep(valid_data)
+            top_cities = metric_city(valid_data)
+            percentage = metric_type_wrk(valid_data)
+
     except FileNotFoundError:
         print("I don't find the file")
         return
@@ -80,6 +194,11 @@ def main() -> None:
     print("=== RESUMEN ===")
     print(f"Valid rows: {len(valid_data)}")
     print(f"Invalid rows: {len(invalid_data)}")
+    print(f"Average: {average_salary}")
+    print("-------------------")
+    print(f"Cities: {top_cities}")
+    print("-------------------")
+    print(f"Porcentage %: {percentage}")
 
 if __name__ == "__main__":
     main()
