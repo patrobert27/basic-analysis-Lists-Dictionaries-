@@ -1,4 +1,6 @@
 import csv
+from typing import Any
+import json
 
 FILE_PATH = "employees.csv"
 
@@ -62,8 +64,9 @@ def metric_dep(data: list[dict]) -> dict:
     # }
 
     for employee in data:
-        dep = employee["department"]
-        salary = float(employee["monthly_salary"])
+        dep = (employee.get("department") or "").strip()
+        salary = float(employee.get("monthly_salary") or 0)
+
 
         if dep not in departments:
             departments[dep] = {
@@ -98,7 +101,7 @@ def metric_city(data: list[dict]) -> dict:
     # }
 
     for employee in data:
-        city = employee["city"]
+        city = (employee.get("city") or "").strip()
 
         if city not in cities:
             cities[city] = {
@@ -108,7 +111,9 @@ def metric_city(data: list[dict]) -> dict:
         cities[city]["total_persons"] += 1
 
 
-    cities_sorted = dict(sorted(cities.items(), key=lambda item: item[0], reverse=True) [:5])
+    cities_sorted = dict(
+        sorted(cities.items(), key=lambda item: item[1]["total_persons"], reverse=True)[:5]
+    )
 
 
     return cities_sorted
@@ -128,8 +133,9 @@ def metric_type_wrk(data: list[dict]) -> dict:
     # }
 
     for employee in data:
-        country = employee["country"]
-        remote = employee["remote"]
+        country = (employee.get("country") or "").strip()
+        remote = (employee.get("remote") or "").strip().lower() #true or false
+        is_remote = remote in ("true", "1", "yes", "y")
 
         if country not in countries:
             countries[country] = {
@@ -140,7 +146,7 @@ def metric_type_wrk(data: list[dict]) -> dict:
             }
 
         countries[country]["total_persons"] += 1
-        if remote:
+        if is_remote:
             countries[country]["remote"] += 1
         else:
             countries[country]["presencial"] += 1
@@ -152,6 +158,28 @@ def metric_type_wrk(data: list[dict]) -> dict:
         values["remote_percentage"] = round((remote / total) * 100, 2)
 
     return countries
+
+def duplicate_name_hire(data: list[dict]) -> set[str]:
+    seen: set[tuple[str, str]] = set()
+    duplicate_ids: set[str] = set()
+
+    for row in data:
+        # if exsist -> return value
+        # else -> return None "", for don't obtain a error
+        name = (row.get("name") or "").strip()
+        hire_date = (row.get("hire_date") or "").strip()
+        employee_id = (row.get("employee_id") or "").strip()
+
+        key = (name, hire_date)
+
+        if key in seen:
+            # este es un duplicado (segunda vez o más)
+            if employee_id:
+                duplicate_ids.add(employee_id)
+        else:
+            seen.add(key)
+
+    return duplicate_ids
 
 
 
@@ -181,6 +209,21 @@ def main() -> None:
             average_salary = metric_dep(valid_data)
             top_cities = metric_city(valid_data)
             percentage = metric_type_wrk(valid_data)
+            duplicate = duplicate_name_hire(valid_data)
+
+            #save the data in a JSON
+            j = None
+
+            try:
+                j = open("employees_clean.json", "w", encoding="utf-8")
+                json.dump(valid_data, j, ensure_ascii=False, indent=2)
+
+            except OSError as e:
+                print("Error writing file:", e)
+
+            finally:
+                if j is not None:
+                    j.close()
 
     except FileNotFoundError:
         print("I don't find the file")
@@ -189,16 +232,20 @@ def main() -> None:
         print(f"CSV format error: {e}")
         return
     finally:
-        f.close()
+        if f is not None:
+            f.close()
 
-    print("=== RESUMEN ===")
+    print("=== RESUM ===")
     print(f"Valid rows: {len(valid_data)}")
     print(f"Invalid rows: {len(invalid_data)}")
+    print("-------------------")
     print(f"Average: {average_salary}")
     print("-------------------")
     print(f"Cities: {top_cities}")
     print("-------------------")
     print(f"Porcentage %: {percentage}")
+    print("-------------------")
+    print(f"Duplicate Id %: {duplicate}")
 
 if __name__ == "__main__":
     main()
