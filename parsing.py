@@ -1,8 +1,6 @@
 import csv
-from typing import Any
 import json
 
-FILE_PATH = "employees.csv"
 
 def is_float(string: str) -> bool:
     try:
@@ -11,16 +9,44 @@ def is_float(string: str) -> bool:
     except ValueError:
         return False
 
-def validate_employee(data: dict) -> tuple[bool, str | None]:
+def load_employees(path: str) -> list[dict]:
+    rows: list[dict] = []
+
+    f = None
+
+    try:
+        f = open(path, "r", encoding="utf-8", newline="")
+
+        # Esto convierte el CSV a dicts
+        # This transform the CSV to a dinc
+        reader = csv.DictReader(f)
+
+        for row in reader:
+            rows.append(row)
+        return rows
+
+    except FileNotFoundError:
+        print("I don't find the file")
+        return []
+    except csv.Error as e:
+        print(f"CSV format error: {e}")
+        return []
+    finally:
+        if f is not None:
+            f.close()
+
+
+
+def validate_employee(row: dict) -> tuple[bool, str | None]:
     # Validar el id
     # Validate employee_id
-    emp_id = data.get("employee_id", "").strip()
+    emp_id = row.get("employee_id", "").strip()
     if not emp_id.isdigit():
         return False, "invalid employee_id"
 
     # Validar la edad
     # Validate age
-    age_str = data.get("age", "").strip()
+    age_str = row.get("age", "").strip()
     if not age_str.isdigit():
         return False, "age is not an integer" # No es un numero entero
     age = int(age_str)
@@ -29,7 +55,7 @@ def validate_employee(data: dict) -> tuple[bool, str | None]:
 
     # Validar salario mensual
     # Validate monthly salary
-    salary_str = data.get("monthly_salary", "").strip()
+    salary_str = row.get("monthly_salary", "").strip()
     if not is_float(salary_str):
         return False, "monthly_salary is not a number" # No es un numero
     monthly_salary = float(salary_str)
@@ -38,7 +64,7 @@ def validate_employee(data: dict) -> tuple[bool, str | None]:
 
     # Validar puntos
     # Validate performance score
-    perf_str = data.get("performance", "").strip()
+    perf_str = row.get("performance", "").strip()
     if not is_float(perf_str):
         return False, "performance is not a number"
     performance = float(perf_str)
@@ -48,10 +74,43 @@ def validate_employee(data: dict) -> tuple[bool, str | None]:
     # All validations passed
     return True, None
 
-
-def metric_dep(data: list[dict]) -> dict:
+def filter_valid(rows: list[dict]) -> tuple[list[dict], list[dict]]:
     """
-    data: lista de empleados (dicts) con al menos:
+    Split rows into valid and invalid
+    Separa filas válidas e inválidas con motivo del error
+
+    Invalid rows are returned as dicts with:
+    Filas invalidas se devuelven en un diccionarrio asi:
+    - employee_id
+    - reason
+
+    Args:
+        rows: List of employee rows.
+
+    Returns:
+        (valid_rows, invalid_rows_with_reason)
+        (filas_validas, filas_invalidas_con_motivo)
+    """
+    valid: list[dict] = []
+    invalid: list[dict] = []
+
+    for row in rows:
+        ok, reason = validate_employee(row)
+        if ok:
+            valid.append(row)
+        else:
+            invalid.append(
+                {
+                    "employee_id": (row.get("employee_id") or "").strip(),
+                    "reason": reason,
+                }
+            )
+
+    return valid, invalid
+
+def metric_dep(row: list[dict]) -> dict:
+    """
+    row: lista de empleados (dicts) con al menos:
           - 'department'
           - 'monthly_salary'
     return: dict con salario medio por departamento
@@ -63,7 +122,7 @@ def metric_dep(data: list[dict]) -> dict:
     #   "HR": {"total_salary": 6789.0, "count": 3}
     # }
 
-    for employee in data:
+    for employee in row:
         dep = (employee.get("department") or "").strip()
         salary = float(employee.get("monthly_salary") or 0)
 
@@ -87,9 +146,9 @@ def metric_dep(data: list[dict]) -> dict:
 
     return average_salary_by_dep_sorted
 
-def metric_city(data: list[dict]) -> dict:
+def metric_city(row: list[dict]) -> dict:
     """
-    data: lista de empleados (dicts) con al menos:
+    row: lista de empleados (dicts) con al menos:
           - 'city'
           - 'count'
     return: 5 city con mas personas
@@ -100,7 +159,7 @@ def metric_city(data: list[dict]) -> dict:
     #   "Paris": {"total_persons": 12345.0}
     # }
 
-    for employee in data:
+    for employee in row:
         city = (employee.get("city") or "").strip()
 
         if city not in cities:
@@ -119,9 +178,9 @@ def metric_city(data: list[dict]) -> dict:
     return cities_sorted
 
 
-def metric_type_wrk(data: list[dict]) -> dict:
+def metric_type_wrk(row: list[dict]) -> dict:
     """
-    data: lista de empleados (dicts) con al menos:
+    row: lista de empleados (dicts) con al menos:
           - 'remote' o true o false
           - 'country'
     return: 5 city con mas personas
@@ -132,7 +191,7 @@ def metric_type_wrk(data: list[dict]) -> dict:
     #   "France": {"total_persons": 12345.0, 'remote': 0, 'presencial': 0}
     # }
 
-    for employee in data:
+    for employee in row:
         country = (employee.get("country") or "").strip()
         remote = (employee.get("remote") or "").strip().lower() #true or false
         is_remote = remote in ("true", "1", "yes", "y")
@@ -159,11 +218,11 @@ def metric_type_wrk(data: list[dict]) -> dict:
 
     return countries
 
-def duplicate_name_hire(data: list[dict]) -> set[str]:
+def duplicate_name_hire(rows: list[dict]) -> set[str]:
     seen: set[tuple[str, str]] = set()
     duplicate_ids: set[str] = set()
 
-    for row in data:
+    for row in rows:
         # if exsist -> return value
         # else -> return None "", for don't obtain a error
         name = (row.get("name") or "").strip()
@@ -181,71 +240,60 @@ def duplicate_name_hire(data: list[dict]) -> set[str]:
 
     return duplicate_ids
 
+def save_clean_json(rows: list[dict], path: str) -> None:
+    #save the data in a JSON
+    j = None
+    try:
+        j = open(path, "w", encoding="utf-8")
+        json.dump(rows, j, ensure_ascii=False, indent=2)
+
+    except OSError as e:
+        print("Error writing file:", e)
+
+    finally:
+        if j is not None:
+            j.close()
 
 
 def main() -> None:
-    valid_data: list[dict] = []
-    invalid_data: list[dict] = []  # {"employee_id": ..., "reason": ...}
 
     try:
-        f = open(FILE_PATH, "r", encoding="utf-8", newline="")
+        rows = load_employees("employees.csv")
 
-        # Esto convierte el CSV a dicts
-        # This transform the CSV to a dinc
-        reader = csv.DictReader(f)
-
-        for row in reader:
-            ok, reason = validate_employee(row)
-
-            if ok:
-                valid_data.append(row)
-            else:
-                invalid_data.append({
-                    "employee_id": row.get("employee_id"),
-                    "reason": reason
-                })
-
-        if valid_data:
-            average_salary = metric_dep(valid_data)
-            top_cities = metric_city(valid_data)
-            percentage = metric_type_wrk(valid_data)
-            duplicate = duplicate_name_hire(valid_data)
-
-            #save the data in a JSON
-            j = None
-
-            try:
-                j = open("employees_clean.json", "w", encoding="utf-8")
-                json.dump(valid_data, j, ensure_ascii=False, indent=2)
-
-            except OSError as e:
-                print("Error writing file:", e)
-
-            finally:
-                if j is not None:
-                    j.close()
+        if not rows:
+            return
 
     except FileNotFoundError:
-        print("I don't find the file")
+        print("File not found")
         return
     except csv.Error as e:
         print(f"CSV format error: {e}")
         return
-    finally:
-        if f is not None:
-            f.close()
 
-    print("=== RESUM ===")
+    valid_data, invalid_data = filter_valid(rows)
+
+    average_salary = metric_dep(valid_data)
+    top_cities = metric_city(valid_data)
+    percentage = metric_type_wrk(valid_data)
+    duplicate = duplicate_name_hire(valid_data)
+
+    try:
+        save_clean_json(valid_data, "employees_clean.json")
+    except OSError as e:
+        print("Error writing file:", e)
+        return
+
+    print("=== SUMMARY ===")
     print(f"Valid rows: {len(valid_data)}")
     print(f"Invalid rows: {len(invalid_data)}")
     print("-------------------")
-    print(f"Average: {average_salary}")
+    print(f"Average salary by department: {average_salary}")
     print("-------------------")
-    print(f"Cities: {top_cities}")
+    print(f"Top 5 cities: {top_cities}")
     print("-------------------")
-    print(f"Porcentage %: {percentage}")
+    print(f"Remote % by country: {percentage}")
     print("-------------------")
-    print(f"Duplicate Id %: {duplicate}")
+    print(f"Duplicate IDs: {duplicate}")
 
 if __name__ == "__main__":
     main()
