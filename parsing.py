@@ -108,7 +108,18 @@ def filter_valid(rows: list[dict]) -> tuple[list[dict], list[dict]]:
 
     return valid, invalid
 
-def metric_dep(row: list[dict]) -> dict:
+
+def group_by(rows: list[dict], key: str) -> dict[str, list[dict]]:
+    """Agrupa filas por el valor de una clave.
+       Groups rows by the value of a key."""
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        k = (row.get(key) or "").strip()
+        groups.setdefault(k, []).append(row)
+    return groups
+
+
+def aggregate_salary(rows: list[dict]) -> dict[str, float]:
     """
     row: lista de empleados (dicts) con al menos:
           - 'department'
@@ -116,105 +127,71 @@ def metric_dep(row: list[dict]) -> dict:
     return: dict con salario medio por departamento
     """
 
-    departments = {}  
-    # {
-    #   "IT": {"total_salary": 12345.0, "count": 5},
-    #   "HR": {"total_salary": 6789.0, "count": 3}
-    # }
+    groups = group_by(rows, "department") 
+    #{
+    #   "IT": [emp1, emp2, emp3],
+    #   "HR": [emp4, emp5]
+    #}
 
-    for employee in row:
-        dep = (employee.get("department") or "").strip()
-        salary = float(employee.get("monthly_salary") or 0)
+    average_salary: dict[str, float] = {}
+
+    for dep, dep_rows in groups.items():
+        total_salary = 0.0
+        for emp in dep_rows:
+            total_salary += float(emp.get("monthly_salary") or 0)
+
+        if dep_rows:
+            average_salary[dep] = round(total_salary / len(dep_rows), 2)
+        else:
+            average_salary[dep] = 0.0
 
 
-        if dep not in departments:
-            departments[dep] = {
-                "total_salary": 0.0,
-                "count": 0
-            }
+    return dict(sorted(average_salary.items(), key=lambda item: item[1], reverse=True))
 
-        departments[dep]["total_salary"] += salary
-        departments[dep]["count"] += 1
-
-    # calcular salario medio
-    average_salary = {}
-
-    for dep, values in departments.items():
-        average_salary[dep] = round(values["total_salary"] / values["count"], 2)
-
-    average_salary_by_dep_sorted = dict(sorted(average_salary.items(), key=lambda item: item[1], reverse=True))
-
-    return average_salary_by_dep_sorted
-
-def metric_city(row: list[dict]) -> dict:
+def metric_city(rows: list[dict]) -> dict[str, int]:
     """
-    row: lista de empleados (dicts) con al menos:
-          - 'city'
-          - 'count'
-    return: 5 city con mas personas
+    Top 5 ciudades con más empleados.
     """
-    cities = {}  
-    # {
-    #   "London": {"total_persons": 12345.0},
-    #   "Paris": {"total_persons": 12345.0}
-    # }
 
-    for employee in row:
-        city = (employee.get("city") or "").strip()
+    groups = group_by(rows, "city")
 
-        if city not in cities:
-            cities[city] = {
-                "total_persons": 0,
-            }
+    city_counts = {}
 
-        cities[city]["total_persons"] += 1
-
+    for city, city_rows in groups.items():
+        city_counts[city] = len(city_rows)
 
     cities_sorted = dict(
-        sorted(cities.items(), key=lambda item: item[1]["total_persons"], reverse=True)[:5]
+        sorted(city_counts.items(), key=lambda item: item[1], reverse=True)[:5]
     )
-
 
     return cities_sorted
 
 
-def metric_type_wrk(row: list[dict]) -> dict:
+
+def metric_type_wrk(rows: list[dict]) -> dict:
     """
-    row: lista de empleados (dicts) con al menos:
-          - 'remote' o true o false
-          - 'country'
-    return: 5 city con mas personas
+    % de empleados remotos por país.
     """
-    countries = {}  
-    # {
-    #   "Spain": {"total_persons": 12345.0, 'remote': 0, 'presencial': 0},
-    #   "France": {"total_persons": 12345.0, 'remote': 0, 'presencial': 0}
-    # }
 
-    for employee in row:
-        country = (employee.get("country") or "").strip()
-        remote = (employee.get("remote") or "").strip().lower() #true or false
-        is_remote = remote in ("true", "1", "yes", "y")
+    groups = group_by(rows, "country")
 
-        if country not in countries:
-            countries[country] = {
-                "total_persons": 0,
-                'remote': 0,
-                'presencial': 0,
-                "remote_percentage": 0.0
-            }
+    countries = {}
 
-        countries[country]["total_persons"] += 1
-        if is_remote:
-            countries[country]["remote"] += 1
-        else:
-            countries[country]["presencial"] += 1
+    for country, country_rows in groups.items():
+        total = len(country_rows)
+        remote_count = 0
 
-    for country, values in countries.items():
-        total = values["total_persons"]
-        remote = values["remote"]
+        for r in country_rows:
+            remote = (r.get("remote") or "").strip().lower()
+            if remote in ("true", "1", "yes", "y"):
+                remote_count += 1
 
-        values["remote_percentage"] = round((remote / total) * 100, 2)
+        countries[country] = {
+            "total_persons": total,
+            "remote": remote_count,
+            "presencial": total - remote_count,
+            "remote_percentage": round((remote_count / total) * 100, 2) if total else 0.0
+        }
 
     return countries
 
@@ -272,7 +249,7 @@ def main() -> None:
 
     valid_data, invalid_data = filter_valid(rows)
 
-    average_salary = metric_dep(valid_data)
+    average_salary = aggregate_salary(valid_data)
     top_cities = metric_city(valid_data)
     percentage = metric_type_wrk(valid_data)
     duplicate = duplicate_name_hire(valid_data)

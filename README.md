@@ -56,8 +56,8 @@ In this initial stage, the focus is on **data cleaning and validation**.
 **Second version in the `pipeline-funcional` branch:**
 
 - Implementation of a functional pipeline for data loading, validation, and processing.
-- Clear separation of responsibilities through independent functions.
 
+- Clear separation of responsibilities through functions. I created one called `group_by`, which makes it easier to organize the data into a dictionary structure and simplifies counting or extracting information from the grouped data.
 ---
 
 ### Errors and Fixes During Development
@@ -74,6 +74,9 @@ This may cause errors if fields are null or incorrectly formatted.
   country = (employee.get("country") or "").strip()
 
 This prevents errors when data is missing and improves code robustness.
+
+- Previously, the data organization and processing logic was repeated in different parts of the code, which resulted in unnecessary lines and reduced clarity.
+Now the code is better structured, divided into reusable functions, and easier to understand and maintain.
 
 ---
 
@@ -144,12 +147,13 @@ En esta primera etapa, el foco está en la **limpieza y validación de datos**.
 - Separación de los datos en:
   - Una lista de **registros válidos**.
   - Una lista de **registros inválidos**, almacenando el `employee_id` y el motivo del error.
-- Uso de funciones para organizar la lógica y facilitar el mantenimiento del código.
+- Creación de la función `group_by`, que permite agrupar los datos por una clave específica y facilita su organización en estructuras tipo diccionario. Esto simplifica el cálculo de métricas y la extracción de información a partir de los datos agrupados.
+- Código más modular, reutilizable y fácil de mantener.
 
 **Segunda versión en la rama `pipeline-funcional`:**
 
 - Implementación de un pipeline funcional para la carga, validación y procesamiento de datos.
-- Separación clara de responsabilidades mediante funciones independientes.
+- Tambien separación clara de responsabilidades mediante funciones, he creado una que se llama `grup_by` que a la hora de organizar y dejar un dicionarrio con esos datos y ya contavilizar o extrar informaion es mas sencillo.
 
 ---
 
@@ -167,6 +171,8 @@ Esto puede provocar errores si existen campos nulos o mal formateados.
 
 lo que evita errores cuando faltan datos y mejora la robustez del código.
 
+- Anteriormente se repetía la lógica de organización y procesamiento de datos en distintos puntos del código, lo que generaba líneas innecesarias y menor claridad.
+  Ahora el código está mejor estructurado, dividido en funciones reutilizables y resulta más fácil de entender y mantener.
 ---
 
 ### Próximos pasos
