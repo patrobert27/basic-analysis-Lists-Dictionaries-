@@ -58,6 +58,37 @@ In this initial stage, the focus is on **data cleaning and validation**.
 - Implementation of a functional pipeline for data loading, validation, and processing.
 
 - Clear separation of responsibilities through functions. I created one called `group_by`, which makes it easier to organize the data into a dictionary structure and simplifies counting or extracting information from the grouped data.
+
+**Third version in the domain-models branch, file ``main.py``:**
+- An object-oriented domain model is introduced to represent employees using classes instead of working only with dictionaries.
+
+- A class hierarchy is implemented:
+
+  - ``Person`` as an abstract base class.
+
+  - ``Employee`` with robust data parsing and employee-specific logic.
+
+  - ``RemoteEmployee`` which extends Employee and adds specific behavior for remote employees.
+
+- Valid CSV records are now converted into objects, allowing the use of typed data and better encapsulation of business logic.
+
+- Business logic is added directly into the classes:
+  - employee tenure calculation (``tenure_years``)
+  - monthly net salary estimation (``monthly_net_estimate``)
+  - specific calculation for remote employees including a home office bonus.
+
+- Employees are separated into remote and onsite lists using operations on the objects.
+
+- A “best value” ranking is generated based on ``performance / monthly_salary``, returning the top 15 employees.
+
+- The project structure is improved by clearly separating:
+
+  - the data processing pipeline
+
+  - the domain business logic.
+
+- The code becomes more organized, reusable, and easier to extend.
+
 ---
 
 ### Errors and Fixes During Development
@@ -136,24 +167,52 @@ En esta primera etapa, el foco está en la **limpieza y validación de datos**.
 
 #### Funcionalidades implementadas
 
-**Primera versión en la rama `main`:**
+**Primera versión en la rama `main` fichero `parsing.py`:**
+- Lectura del archivo CSV utilizando únicamente la librería estándar de Python
 
-- Lectura del archivo CSV utilizando únicamente la librería estándar de Python.
-- Conversión de cada fila en un diccionario.
+- Conversión de cada fila en un diccionario
+
 - Validación de campos clave:
-  - `age` debe estar entre 18 y 70.
-  - `monthly_salary` debe ser mayor que 0.
-  - `performance` debe estar entre 1.0 y 5.0.
+  - `age` debe estar entre 18 y 70
+  - `monthly_salary` debe ser mayor que 0
+  - `performance` debe estar entre 1.0 y 5.0
+
 - Separación de los datos en:
   - Una lista de **registros válidos**.
   - Una lista de **registros inválidos**, almacenando el `employee_id` y el motivo del error.
-- Creación de la función `group_by`, que permite agrupar los datos por una clave específica y facilita su organización en estructuras tipo diccionario. Esto simplifica el cálculo de métricas y la extracción de información a partir de los datos agrupados.
+- Creación de la función `group_by`, que permite agrupar los datos por una clave específica y facilita su organización en estructuras tipo diccionario. Esto simplifica el cálculo de métricas y la extracción de información a partir de los datos agrupados
+
 - Código más modular, reutilizable y fácil de mantener.
 
-**Segunda versión en la rama `pipeline-funcional`:**
+**Segunda versión en la rama `pipeline-funcional` fichero `parsing.py`:**
+- Implementación de un pipeline funcional para la carga, validación y procesamiento de datos
 
-- Implementación de un pipeline funcional para la carga, validación y procesamiento de datos.
-- Tambien separación clara de responsabilidades mediante funciones, he creado una que se llama `grup_by` que a la hora de organizar y dejar un dicionarrio con esos datos y ya contavilizar o extrar informaion es mas sencillo.
+- Tambien separación clara de responsabilidades mediante funciones, he creado una que se llama `grup_by` que a la hora de organizar y dejar un dicionarrio con esos datos y ya contavilizar o extrar informaion es mas sencillo
+
+**Tercera versión en la rama `domain-models` fichero `main.py`:**
+- Se introduce un modelo de dominio orientado a objetos para representar los empleados mediante clases en lugar de trabajar solo con diccionarios
+
+- Se implementa una jerarquía de clases:
+  - ``Person`` como clase base abstracta
+  - ``Employee`` con parsing robusto de los datos y lógica propia del empleado
+  - ``RemoteEmployee`` que hereda de Employee y añade comportamiento específico para empleados remotos
+
+- Los registros válidos del CSV ahora se convierten en objetos, lo que permite trabajar con datos tipados y encapsular mejor la lógica del negocio
+
+- Se añade lógica directamente en las clases:
+  - cálculo de antigüedad del empleado (``tenure_years``)
+  - estimación del salario neto (``monthly_net_estimate``)
+  - cálculo específico para empleados remotos con bonus de teletrabajo
+
+- Los empleados se separan en listas de remotos y presenciales usando operaciones sobre los objetos
+
+- Se genera un ranking de “mejor valor” basado en performance / monthly_salary, obteniendo los 15 mejores empleados
+
+- Se mejora la estructura del proyecto separando claramente:
+  - el pipeline de procesamiento de datos
+  - la lógica de negocio del dominio
+  
+- El código queda más organizado, reutilizable y fácil de extender.
 
 ---
 
