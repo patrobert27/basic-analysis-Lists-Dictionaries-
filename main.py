@@ -1,4 +1,4 @@
-from pipeline.parsing import (
+from pipeline.employees_pipeline import (
     load_employees,
     filter_valid,
     save_clean_json,
