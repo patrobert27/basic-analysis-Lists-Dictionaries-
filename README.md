@@ -214,6 +214,9 @@ En esta primera etapa, el foco está en la **limpieza y validación de datos**.
   
 - El código queda más organizado, reutilizable y fácil de extender.
 
+**Quarta versión en la rama ``kpi-sales-analytics`` fichero ``**
+
+
 ---
 
 ### Errores y correcciones durante el proyecto
@@ -232,6 +235,9 @@ lo que evita errores cuando faltan datos y mejora la robustez del código.
 
 - Anteriormente se repetía la lógica de organización y procesamiento de datos en distintos puntos del código, lo que generaba líneas innecesarias y menor claridad.
   Ahora el código está mejor estructurado, dividido en funciones reutilizables y resulta más fácil de entender y mantener.
+
+- Me cuesta no poner comentarios en español para documentar qué hace cada proceso/metodo
+
 ---
 
 ### Próximos pasos

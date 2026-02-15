@@ -1,4 +1,5 @@
 from pipeline.employees_loader_json import get_employee_department_map
+from pipeline.sales_loader import load_transactions, load_targets
 
 
 def main() -> None:
@@ -8,6 +9,11 @@ def main() -> None:
     )
 
     print("Employee map size:", len(emp_map))
+
+    transactions = load_transactions("sales.xlsx")
+    print(transactions[:2])
+    targets = load_targets("sales.xlsx")
+    print(targets[:2])
 
 
 if __name__ == "__main__":

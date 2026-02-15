@@ -75,7 +75,7 @@ para facilitar cruces de información.
 
 def build_employee_department_map(rows: list[dict[str, Any]]) -> dict[str, str]:
     """
-    Build {employee_id: department} from employee rows.
+    Build {employee_id: department} from employee rows
     """
     mapping: dict[str, str] = {}
 
@@ -115,7 +115,7 @@ def get_employee_department_map(
     csv_path: str = "employees.csv",
 ) -> dict[str, str]:
     """
-    Return {employee_id: department}.
+    Return {employee_id: department}
 
     Priority:
     1) employees_clean.json (already validated)
