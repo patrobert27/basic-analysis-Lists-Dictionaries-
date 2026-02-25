@@ -130,12 +130,18 @@ def metric_type_wrk(data: list[dict]) -> dict:
     for employee in data:
         country = employee["country"]
         remote = employee["remote"]
+        
+        if isinstance(remote, bool):
+            remote = bool(remote)
+        else:
+            remote = remote.lower() == "true"
+        
 
         if country not in countries:
             countries[country] = {
                 "total_persons": 0,
-                'remote': 0,
-                'presencial': 0,
+                "remote": 0,
+                "presencial": 0,
                 "remote_percentage": 0.0
             }
 
@@ -194,6 +200,7 @@ def main() -> None:
     print("=== RESUMEN ===")
     print(f"Valid rows: {len(valid_data)}")
     print(f"Invalid rows: {len(invalid_data)}")
+    print("-------------------")
     print(f"Average: {average_salary}")
     print("-------------------")
     print(f"Cities: {top_cities}")

@@ -3,7 +3,7 @@ employee_id,name,age,department,country,city,hire_date,employment_type,remote,pe
 2,Laura Navarro Sánchez,60,HR,IT,Rome,2018-07-17,FULL_TIME,False,1.89,3156.26
 3,Irene Díaz Fernández,25,IT,NL,Bilbao,2022-08-11,FULL_TIME,False,2.42,2540.82
 4,Pablo Gómez Fernández,30,Data,ES,Lyon,2024-08-27,CONTRACT,False,2.78,2809.67
-5,Pablo Pérez Gómez,20,IT,IT,Amsterdam,2021-05-13,FULL_TIME,True,3.82,1887.21
+5,Pablo Pérez Gómez,20,IT,IT,Amsterdam,2021-05-13,FULL_TIME,True,3.82,0
 6,Adrián Rodríguez Gómez,41,Sales,DE,Valencia,2017-04-24,FULL_TIME,False,5.0,2893.95
 7,Luis López Gómez,42,Sales,NL,Porto,2022-07-11,FULL_TIME,False,3.44,2428.85
 8,Irene Romero González,20,Data,ES,Valencia,2024-05-31,FULL_TIME,False,2.37,1380.81
